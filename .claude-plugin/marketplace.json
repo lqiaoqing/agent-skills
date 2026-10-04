@@ -6,7 +6,7 @@
     "url": "https://github.com/lqiaoqing"
   },
   "metadata": {
-    "description": "Code-rendered music-video skills adapted for Chinese lyrics and Windows laptops: painted watercolour MVs (p5.brush) and three.js kinetic lyric MVs."
+    "description": "Code-rendered video skills adapted for Chinese and Windows laptops: painted watercolour MVs and story animations (p5.brush, TTS narration) and three.js kinetic lyric MVs."
   },
   "plugins": [
     {
@@ -49,6 +49,27 @@
       ],
       "license": "MIT",
       "homepage": "https://github.com/lqiaoqing/agent-skills/tree/main/skills/kinetic-lyric-mv"
+    },
+    {
+      "name": "painted-story",
+      "description": "Make hand-painted watercolour-and-ink animated videos (MP4) from a STORY - a script, a story text, or just a theme the agent first writes into a short script - with TTS narration (free edge-tts voices, Chinese and English), subtitles only, or the user's own recorded narration aligned by faster-whisper; optional licence-clean background music with ducking. Same engine as painted-mv (p5.js + p5.brush painted frame by frame in headless Chrome/Edge, ffmpeg): script → timeline → storyboard → per-scene painting → contact-sheet review → render. Also does song + lyrics MVs. Bilingual subtitles, bundled CJK brush font, Windows-friendly. Use when the user asks for a painted / watercolour / 水彩 / 手绘 story animation, 绘本动画, 故事动画, 童话/儿童故事视频, animated picture book, narrated cartoon, 配音动画, or a painted video from a story, script or theme.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/painted-story"
+      ],
+      "category": "design",
+      "keywords": [
+        "animation",
+        "storytelling",
+        "tts",
+        "watercolour",
+        "p5js",
+        "chinese",
+        "windows"
+      ],
+      "license": "MIT",
+      "homepage": "https://github.com/lqiaoqing/agent-skills/tree/main/skills/painted-story"
     }
   ]
 }

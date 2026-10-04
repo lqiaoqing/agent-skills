@@ -40,6 +40,7 @@ Claude Code 也可以直接用斜杠命令安装：
 | skill 名 | 一句话说明 | 主要依赖 | 目录 |
 |---|---|---|---|
 | `painted-mv` | 水彩手绘风动画 / 歌词 MV：p5.js + p5.brush 逐帧作画，测节拍、对齐歌词、写分镜后出片，支持中文毛笔字卡拉 OK | Node ≥ 22.6、ffmpeg、Chrome/Edge；歌词对齐可选 uv（faster-whisper） | [skills/painted-mv](skills/painted-mv/) |
+| `painted-story` | 水彩手绘风故事动画：给故事、剧本或只给主题（先写脚本），用 AI 配音（免费 edge-tts）+ 字幕、纯字幕或你自己的录音（whisper 自动对齐），可加背景音乐；同 painted-mv 的引擎，独立安装 | Node ≥ 22.6、ffmpeg、Chrome/Edge、uv（edge-tts / faster-whisper） | [skills/painted-story](skills/painted-story/) |
 | `kinetic-lyric-mv` | three.js 卡点动态歌词 MV：着色器、逐字砸字、辉光与运动模糊，跟节拍同步，中文逐字排版，带核显低配预设 | Node ≥ 22.6、ffmpeg、Chrome/Edge、bun、uv / Python 3 | [skills/kinetic-lyric-mv](skills/kinetic-lyric-mv/) |
 
 各技能的上游来源和许可证见文末“许可证与致谢”和各文件夹里的 `NOTICE.md`。
@@ -107,11 +108,11 @@ git clone https://github.com/lqiaoqing/agent-skills.git && cd agent-skills && ba
 
 | 依赖 | 用途 | Windows 免管理员安装 | macOS |
 |---|---|---|---|
-| Node.js ≥ 22.6 | 渲染器（painted-mv、kinetic-lyric-mv） | [nodejs.org](https://nodejs.org) 或 `winget install OpenJS.NodeJS.LTS` | `brew install node` |
+| Node.js ≥ 22.6 | 渲染器（painted-mv、painted-story、kinetic-lyric-mv） | [nodejs.org](https://nodejs.org) 或 `winget install OpenJS.NodeJS.LTS` | `brew install node` |
 | ffmpeg | 编码 MP4 | `winget install Gyan.FFmpeg --scope user` | `brew install ffmpeg` |
 | Chrome 或 Edge | headless 渲染（WebGL 走 ANGLE；Windows 默认用 D3D11，Intel 核显可用） | Windows 自带 Edge 就行 | Chrome |
 | bun | kinetic-lyric-mv 安装依赖和预览 | `winget install Oven-sh.Bun --scope user` | `brew install oven-sh/bun/bun` |
-| uv | 音乐分析（librosa）、歌词对齐（faster-whisper），会自动下载 Python | `winget install astral-sh.uv --scope user` | `brew install uv` |
+| uv | 音乐分析（librosa）、歌词/录音对齐（faster-whisper）、AI 配音（edge-tts，需联网），会自动下载 Python | `winget install astral-sh.uv --scope user` | `brew install uv` |
 | Python 3 | 脚本入口（`new_project.py`、`beat_grid.py`） | python.org 或 `winget install Python.Python.3.12` | 系统自带 / brew |
 
 网络慢或需要代理时，先设置 `$env:HTTPS_PROXY="http://127.0.0.1:<代理端口>"`（PowerShell；mac/Linux 用 `export HTTPS_PROXY=...`），
@@ -123,6 +124,8 @@ npm / bun / uv 下载都会走代理。whisper 模型在国内可以先设 `HF_E
 - “用 painted-mv 给 `D:\music\song.mp3` 做一支水彩手绘风 MV，歌词在 `song.lrc`，先给我看分镜。”
 - “我只有纯文本歌词 `lyrics.txt`，帮我对齐时间轴，然后做一段 30 秒的水彩动画歌词视频。”
 - “做一个 10 秒的水彩小动画：小狐狸在雨里追一片叶子，不要文字。”
+- “用 painted-story 把这个故事做成 40 秒左右的水彩绘本动画，AI 配音加中文字幕。”（它会先问你配音/字幕/背景音乐怎么选）
+- “用 painted-story 写一个小机器人找星星的儿童故事，脚本先给我看，然后只配字幕和轻音乐。”
 - “用 kinetic-lyric-mv 给这首歌做动态歌词卡点视频，中文逐字砸字，黑底橙色强调色，先出 720p 草稿。”
 - “把 kinetic 草稿按 1080p 30fps 出成片。”
 
@@ -131,6 +134,7 @@ npm / bun / uv 下载都会走代理。whisper 模型在国内可以先设 `HF_E
 
 ```powershell
 node $HOME\.claude\skills\painted-mv\scripts\new_project.mjs my-mv --audio=song.mp3 --lyrics=song.lrc --title="歌名"
+node $HOME\.claude\skills\painted-story\scripts\new_project.mjs my-story --story=story.md --mode=tts   # 或 --mode=subs / --mode=voice
 python $HOME\.claude\skills\kinetic-lyric-mv\scripts\new_project.py my-kinetic --audio song.mp3 --lyrics song.lrc
 ```
 
@@ -141,6 +145,7 @@ python $HOME\.claude\skills\kinetic-lyric-mv\scripts\new_project.py my-kinetic -
 | 技能 | 设置 | 渲染耗时 |
 |---|---|---|
 | painted-mv | 1920×1080、24 fps、`--frames --workers=4` + `--encode` | 约 227 s 出帧（约 0.94 s/帧，4 路并行）+ 约 7 s 编码 |
+| painted-story | 示例《豆豆和迷路的小星星》，34.3 s，1920×1080、24 fps、`--workers=4` | 约 600 s 出帧（约 0.73 s/帧）+ 约 20 s 编码 |
 | kinetic-lyric-mv | `--profile low`（默认：1280×720、30 fps、2 个子帧） | 25 s |
 | kinetic-lyric-mv | `--profile mid`（1920×1080、30 fps、12 个子帧） | 160 s |
 
@@ -167,16 +172,17 @@ WebGL 跑在 `ANGLE (Intel(R) Arc(TM) Graphics, Direct3D11)` 上（不是软件�
 
 | 来源 | 用在哪里 | 许可证 |
 |---|---|---|
-| [JohnHeibel/ClaudeAnimationBase](https://github.com/JohnHeibel/ClaudeAnimationBase) | painted-mv 的引擎 `template/` | MIT（`skills/painted-mv/template/LICENSE`） |
-| [tuzhechen2005/opus-video-skills](https://github.com/tuzhechen2005/opus-video-skills) | painted-mv 的技能结构、卡拉 OK、示例、`beat_grid.py` | MIT（仓库根目录有 LICENSE 文件；副本在 `skills/painted-mv/LICENSE`） |
-| [lintsinghua/paint-mv-skills](https://github.com/lintsinghua/paint-mv-skills) | painted-mv 的 `analyze_audio.mjs`、`lyrics_to_ly.mjs`、`align_lyrics.py`，以及对时、分镜方法 | MIT（`skills/painted-mv/LICENSE.paint-mv-skills`） |
+| [JohnHeibel/ClaudeAnimationBase](https://github.com/JohnHeibel/ClaudeAnimationBase) | painted-mv、painted-story 的引擎 `template/` | MIT（`skills/painted-mv/template/LICENSE`，painted-story 里有同一份） |
+| [tuzhechen2005/opus-video-skills](https://github.com/tuzhechen2005/opus-video-skills) | painted-mv / painted-story 的技能结构、卡拉 OK、示例、`beat_grid.py` | MIT（仓库根目录有 LICENSE 文件；副本在 `skills/painted-mv/LICENSE`） |
+| [lintsinghua/paint-mv-skills](https://github.com/lintsinghua/paint-mv-skills) | painted-mv / painted-story 的 `analyze_audio.mjs`、`lyrics_to_ly.mjs`、`align_lyrics.py`，以及对时、分镜方法 | MIT（`skills/painted-mv/LICENSE.paint-mv-skills`） |
 | [mexicat/pdoom-video](https://github.com/mexicat/pdoom-video)（Giacomo Magnanini），由 [Dakota1-1/super-motion-graphics](https://github.com/Dakota1-1/super-motion-graphics) 打包成技能 | kinetic-lyric-mv 的引擎、场景、分析工具、文档 | MIT（`skills/kinetic-lyric-mv/LICENSE`） |
-| 字体 Ma Shan Zheng、Shantell Sans、Noto Sans SC（子集化）、Archivo、Cormorant Garamond、IBM Plex Mono | 两个技能的 `fonts/` | SIL OFL 1.1（随附 OFL 文本） |
-| 字体 Permanent Marker | painted-mv | Apache-2.0（随附） |
+| 字体 Ma Shan Zheng、Shantell Sans、Noto Sans SC（子集化）、Archivo、Cormorant Garamond、IBM Plex Mono | 各技能的 `fonts/` | SIL OFL 1.1（随附 OFL 文本） |
+| 字体 Permanent Marker | painted-mv、painted-story | Apache-2.0（随附） |
+| [rany2/edge-tts](https://github.com/rany2/edge-tts) | painted-story 的 AI 配音（建项目时由 uv 按需安装，不随仓库分发；语音来自微软 Edge 在线服务） | LGPL-3.0 |
 | Hershey / EMS 笔画字体（`template/app/public/fonts/stroke/*.svg`） | kinetic-lyric-mv | 授权写在每个 SVG 文件头里：EMS 字体（Sheldon B. Michaels）是 SIL OFL；Hershey 字体按其分发条款，任何人可用于任何用途（包括商用），条款文本也在文件头里 |
 
 - **不包含** [JohnHeibel/PDoomVideo](https://github.com/JohnHeibel/PDoomVideo) 的任何代码（该仓库没有声明许可证）。paint-mv-skills 里用来下载并给 PDoomVideo 打补丁的 `fetch_upstream.mjs` / `template.patch` 特意没有带上；painted-mv 的引擎用的是同一作者以 MIT 发布的 ClaudeAnimationBase。
-- P(doom) 等示例歌曲和歌词不包含在本仓库内，也不在 MIT 许可范围内。用这些技能制作视频时，歌曲和歌词的版权由使用者自行负责。
+- P(doom) 等示例歌曲和歌词不包含在本仓库内，也不在 MIT 许可范围内。用这些技能制作视频时，歌曲、歌词、背景音乐和录音的版权由使用者自行负责。
 - npm 依赖（p5.js、p5.brush、three.js、puppeteer-core、playwright-core 等）在建项目时安装，遵循各自的许可证。
 
 感谢以上各位作者的开源工作。
