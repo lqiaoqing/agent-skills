@@ -51,7 +51,7 @@ may be `py` or a full path; always use **node** (not bun) for `scripts/render.ts
   out black, try `--angle d3d11on12` or `--angle gl`; plug in the charger (Windows throttles the iGPU on battery).
 - Cost scales with pixels × sub-frames. Integrated GPUs: draft with `--profile low`, final with `--profile mid`;
   only use `--profile high` / `--samples auto` up to 324 / `--scale 2` on a discrete GPU. Use `perf` to measure ms/frame.
-- Behind a proxy: `$env:HTTPS_PROXY="http://127.0.0.1:7897"` before `bun install` / `uv run` / whisper downloads.
+- Behind a proxy: `$env:HTTPS_PROXY="http://127.0.0.1:7890"` (your proxy port) before `bun install` / `uv run` / whisper downloads.
 
 ## Upstream guide (super-motion-graphics)
 

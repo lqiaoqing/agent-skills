@@ -69,7 +69,7 @@ const win = process.platform === 'win32';
 if (!args['no-install']) {
   console.log('== npm install (p5, p5.brush, puppeteer-core)');
   const r = spawnSync('npm', ['install', '--no-audit', '--no-fund'], { cwd: dir, stdio: 'inherit', shell: win });
-  if (r.status) console.log('npm install failed: re-run it inside the project (behind a proxy: set HTTPS_PROXY=http://127.0.0.1:7897)');
+  if (r.status) console.log('npm install failed: re-run it inside the project (behind a proxy: set HTTPS_PROXY=http://127.0.0.1:7890)');
 }
 
 // 5 · toolchain check

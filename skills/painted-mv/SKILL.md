@@ -129,4 +129,4 @@ page still paints 1920×1080). Report output path, length, ms/frame; check with 
 - WebGL backend: ANGLE D3D11 + `--enable-gpu` by default (Intel Arc / Iris Xe OK). Problems → `--angle=d3d11on12`,
   `--angle=gl`; last resort `--soft-gl` (very slow). Plug in the charger: iGPUs throttle on battery.
 - Integrated GPU: use `--workers=2..4` (more workers do not help once the GPU is saturated) and draft at `--fps=12`.
-- Behind a proxy: `$env:HTTPS_PROXY="http://127.0.0.1:7897"` before `npm install` / `uv run`.
+- Behind a proxy: `$env:HTTPS_PROXY="http://127.0.0.1:7890"` (your proxy port) before `npm install` / `uv run`.

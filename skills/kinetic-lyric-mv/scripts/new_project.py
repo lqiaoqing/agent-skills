@@ -5,7 +5,7 @@
                         [--words lines.txt [--lang zh]]          (plain lyrics aligned with faster-whisper)
 
 kinetic-lyric-mv: Windows-safe (no symlinks, no shell scripts; bun/uv are run through the shell on Windows).
-Downloads honour HTTPS_PROXY (set it to your local proxy, e.g. http://127.0.0.1:7897, if GitHub/PyPI/npm are slow).
+Downloads honour HTTPS_PROXY (set it to your local proxy, e.g. http://127.0.0.1:7890, if GitHub/PyPI/npm are slow).
 
 Creates:
   <dir>/app/        the engine (three.js + Vite + bun), starter scenes, timeline, offline renderer
