@@ -4,20 +4,22 @@
 #   powershell -ExecutionPolicy Bypass -File .\install.ps1 -Tool claude       # only Claude Code  (~\.claude\skills)
 #   powershell -ExecutionPolicy Bypass -File .\install.ps1 -Tool codex        # only Codex        (~\.codex\skills, or $env:CODEX_HOME\skills)
 #   powershell -ExecutionPolicy Bypass -File .\install.ps1 -Copy              # plain copies instead of junctions (re-run after git pull)
-#   powershell -ExecutionPolicy Bypass -File .\install.ps1 -Only painted-mv   # just one skill
+#   powershell -ExecutionPolicy Bypass -File .\install.ps1 -Only painted-mv   # only these skills (folder names under skills\, comma-separated)
+#   powershell -ExecutionPolicy Bypass -File .\install.ps1 -List              # list available skills
 #   powershell -ExecutionPolicy Bypass -File .\install.ps1 -Targets D:\x\skills   # any other skills folder(s)
 #   powershell -ExecutionPolicy Bypass -File .\install.ps1 -Uninstall         # remove what this script installed
 param(
   [ValidateSet('both', 'claude', 'codex')][string]$Tool = 'both',
   [switch]$Copy,
   [switch]$Uninstall,
+  [switch]$List,
   [string[]]$Only,
   [string[]]$Targets
 )
 $ErrorActionPreference = 'Stop'
 # `powershell -File` passes `-Targets a,b` as ONE string: accept comma/semicolon-separated lists too
 $Targets = @($Targets | ForEach-Object { $_ -split '[,;]' } | Where-Object { $_ })
-$Only = @($Only | ForEach-Object { $_ -split '[,;]' } | Where-Object { $_ })
+$Only = @($Only | ForEach-Object { $_ -split '[,;\u3001\s]+' } | Where-Object { $_ })
 $root = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 $src = Join-Path $root 'skills'
 if (-not (Test-Path $src)) { throw "skills folder not found next to install.ps1 ($src)" }
@@ -28,8 +30,12 @@ if ($Targets.Count -eq 0) {
   if ($Tool -in 'both', 'claude') { $Targets += (Join-Path $userHome '.claude\skills') }
   if ($Tool -in 'both', 'codex') { $Targets += (Join-Path $codexHome 'skills') }
 }
-$skills = Get-ChildItem $src -Directory | Where-Object { (Test-Path (Join-Path $_.FullName 'SKILL.md')) -and ($Only.Count -eq 0 -or $Only -contains $_.Name) }
-if (-not $skills) { throw "no matching skills in $src" }
+# skills are discovered automatically: every folder under skills\ that contains a SKILL.md
+$all = @(Get-ChildItem $src -Directory | Where-Object { Test-Path (Join-Path $_.FullName 'SKILL.md') })
+if ($List) { $all | ForEach-Object { $_.Name }; return }
+$missing = @($Only | Where-Object { $all.Name -notcontains $_ })
+if ($missing.Count) { throw "no skill named '$($missing -join "', '")'. Available: $($all.Name -join ', ')" }
+$skills = @($all | Where-Object { $Only.Count -eq 0 -or $Only -contains $_.Name })
 foreach ($t in $Targets) {
   New-Item -ItemType Directory -Force $t | Out-Null
   foreach ($s in $skills) {

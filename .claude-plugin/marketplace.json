@@ -11,25 +11,44 @@
   "plugins": [
     {
       "name": "painted-mv",
-      "description": "Hand-painted watercolour-and-ink music videos and cartoons (p5.js + p5.brush, headless Chrome, ffmpeg) from a song and its Chinese lyrics: beat grid, lyric alignment, storyboard, per-chapter painting, contact-sheet review, brush-font karaoke.",
+      "description": "Make hand-painted watercolour-and-ink music videos and cartoons (MP4) with code, PDoomVideo style - p5.js + p5.brush painted frame by frame in headless Chrome/Edge, encoded with ffmpeg - from a song and its (Chinese) lyrics. Covers the song-driven MV workflow (beat grid, faster-whisper lyric alignment, storyboard from the lyrics, per-chapter painting, contact-sheet review, render) and short non-music cartoons. Bundled CJK brush font for karaoke; Windows-friendly. Use when the user asks for a painted / watercolour / 水彩 / 手绘 animation, cartoon, MV, lyric video, 歌词视频, 动画 MV, or mentions PDoomVideo, ClaudeAnimationBase or p5.brush videos.",
       "source": "./",
       "strict": false,
-      "skills": ["./skills/painted-mv"],
+      "skills": [
+        "./skills/painted-mv"
+      ],
       "category": "design",
-      "keywords": ["music-video", "lyric-video", "watercolour", "p5js", "chinese", "windows"],
-      "homepage": "https://github.com/lqiaoqing/agent-skills/tree/main/skills/painted-mv",
-      "license": "MIT"
+      "keywords": [
+        "music-video",
+        "lyric-video",
+        "watercolour",
+        "p5js",
+        "chinese",
+        "windows"
+      ],
+      "license": "MIT",
+      "homepage": "https://github.com/lqiaoqing/agent-skills/tree/main/skills/painted-mv"
     },
     {
       "name": "kinetic-lyric-mv",
-      "description": "Beat-synced kinetic-typography lyric music videos with a three.js/WebGL engine (pdoom-video style): per-character Chinese type, bloom, grain, motion blur; low-spec 720p profile for integrated GPUs.",
+      "description": "Beat-synced kinetic-typography lyric music videos (MP4) rendered from code with a real three.js/WebGL engine (mexicat/pdoom-video style) - shaders, engraved line fields, per-word / per-character type slams, bloom, grain, sub-frame motion blur - synced to a song's beats, downbeats, hits and word-level lyric timings. Adapted for Chinese lyrics (bundled Noto Sans SC, per-character timing and layout) and Windows laptops with integrated GPUs (ANGLE D3D11, 720p low-spec default profile, no shell scripts). Use when the user wants a kinetic lyric video, 动态歌词 / 歌词卡点视频, beat-synced motion graphics, a \"P(doom) style\" or \"super motion graphics\" MV, title sequence or launch film rendered from code.",
       "source": "./",
       "strict": false,
-      "skills": ["./skills/kinetic-lyric-mv"],
+      "skills": [
+        "./skills/kinetic-lyric-mv"
+      ],
       "category": "design",
-      "keywords": ["music-video", "kinetic-typography", "lyric-video", "threejs", "webgl", "chinese", "windows"],
-      "homepage": "https://github.com/lqiaoqing/agent-skills/tree/main/skills/kinetic-lyric-mv",
-      "license": "MIT"
+      "keywords": [
+        "music-video",
+        "kinetic-typography",
+        "lyric-video",
+        "threejs",
+        "webgl",
+        "chinese",
+        "windows"
+      ],
+      "license": "MIT",
+      "homepage": "https://github.com/lqiaoqing/agent-skills/tree/main/skills/kinetic-lyric-mv"
     }
   ]
 }

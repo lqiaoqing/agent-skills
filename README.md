@@ -1,57 +1,60 @@
 # agent-skills
 
-给 **Claude Code** 和 **Codex** 用的 Agent Skills（智能体技能），两款都是**用代码渲染音乐视频**，并针对**中文歌词**和
-**Windows 笔记本（核显）**做了适配。每个技能是 `skills/<名字>/` 下的一个文件夹，入口是 `SKILL.md`（带 `name` /
-`description` 头信息），Claude Code 和 Codex 通用。
-
-| 技能 | 做什么 | 基于 |
-|---|---|---|
-| [`painted-mv`](skills/painted-mv/) | **水彩手绘风动画 / 歌词 MV**（PDoomVideo 风格）：p5.js + p5.brush 逐帧画水彩和墨线，headless Chrome 渲染，ffmpeg 合成。歌曲驱动流程：测节拍 → faster-whisper 对齐歌词 → 按歌词写分镜 → 逐章作画 → 联系表自查 → 出片；中文毛笔字卡拉 OK | [ClaudeAnimationBase](https://github.com/JohnHeibel/ClaudeAnimationBase)、[opus-video-skills](https://github.com/tuzhechen2005/opus-video-skills) `painted-animation`、[paint-mv-skills](https://github.com/lintsinghua/paint-mv-skills) 的流程与脚本 |
-| [`kinetic-lyric-mv`](skills/kinetic-lyric-mv/) | **three.js 卡点动态歌词 MV**（[mexicat/pdoom-video](https://github.com/mexicat/pdoom-video) 风格）：着色器、刻线、逐字砸字、辉光、颗粒、子帧运动模糊，与节拍和逐字歌词同步；中文逐字排版（思源黑体 Noto Sans SC），核显低配预设 | [super-motion-graphics](https://github.com/Dakota1-1/super-motion-graphics)（移植自 pdoom-video） |
+给 **Claude Code** 和 **Codex** 用的 Agent Skills（智能体技能）合集，偏重中文场景和 Windows 笔记本（核显）。每个技能是
+`skills/<skill名>/` 下的一个文件夹，入口是 `SKILL.md`（带 `name` / `description` 头信息），Claude Code 和 Codex 通用。
+**skill 名就是文件夹名**，全部列在下面的 [Skill 清单](#skill-清单) 里。
 
 ## 一句话安装（推荐）
 
-把下面任意一句粘贴到 **Claude Code / Codex / Cursor 等智能体**的对话框里，它会读取安装说明并替你完成安装（Windows、macOS、Linux 都适用）。
+把下面这句粘贴到 **Claude Code / Codex / Cursor 等智能体**的对话框里，它会读取仓库根目录的安装说明并替你完成安装（Windows、macOS、Linux 都适用）：
 
-只装 painted-mv（水彩 MV）：
 ```text
-请按 https://raw.githubusercontent.com/lqiaoqing/agent-skills/main/INSTALL_FOR_AGENTS.md 的步骤，把 lqiaoqing/agent-skills 里的 painted-mv skill 安装到我的 Claude Code。
+按 https://github.com/lqiaoqing/agent-skills 仓库里 INSTALL_FOR_AGENTS.md 的步骤，把 <skill名> 安装到我的 Claude Code。
 ```
 
-只装 kinetic-lyric-mv（动态歌词）：
+- `<skill名>` 换成 [Skill 清单](#skill-清单) 里的名字；装多个就用 `、` 隔开，全都要就写“全部 skill”。
+- “Claude Code” 可以换成 “Codex”，两个都装就写 “Claude Code 和 Codex”。
+
+例如：
+
 ```text
-请按 https://raw.githubusercontent.com/lqiaoqing/agent-skills/main/INSTALL_FOR_AGENTS.md 的步骤，把 lqiaoqing/agent-skills 里的 kinetic-lyric-mv skill 安装到我的 Claude Code。
+按 https://github.com/lqiaoqing/agent-skills 仓库里 INSTALL_FOR_AGENTS.md 的步骤，把 painted-mv 安装到我的 Claude Code 和 Codex。
 ```
 
-两个都装：
-```text
-请按 https://raw.githubusercontent.com/lqiaoqing/agent-skills/main/INSTALL_FOR_AGENTS.md 的步骤，把 lqiaoqing/agent-skills 里的 painted-mv 和 kinetic-lyric-mv 两个 skill 安装到我的 Claude Code。
-```
-
-装给 Codex：把句末的“Claude Code”换成“Codex”；两个工具都要装就写“Claude Code 和 Codex”。例如：
-```text
-请按 https://raw.githubusercontent.com/lqiaoqing/agent-skills/main/INSTALL_FOR_AGENTS.md 的步骤，把 lqiaoqing/agent-skills 里的全部 skill 安装到我的 Claude Code 和 Codex。
-```
+> 小提示：如果智能体打不开 GitHub 网页，可以把链接换成原始文件地址
+> `https://raw.githubusercontent.com/lqiaoqing/agent-skills/main/INSTALL_FOR_AGENTS.md`。
 
 智能体会：克隆仓库到 `~/.agent-skills/agent-skills` 并运行安装脚本（没有 git 就下载 zip 解压），检查 `SKILL.md` 是否到位；
-遇到同名的其他技能会先问你；它可以帮你检查依赖，但不会擅自安装系统软件。装完重启 Claude Code / Codex 即可。
-说明原文：[INSTALL_FOR_AGENTS.md](INSTALL_FOR_AGENTS.md)。
+名字写错时会列出可用的 skill 让你选；遇到同名的其他技能会先问你；它可以帮你检查依赖，但不会擅自安装系统软件。
+装完重启 Claude Code / Codex 即可。说明原文：[INSTALL_FOR_AGENTS.md](INSTALL_FOR_AGENTS.md)。
 
 Claude Code 也可以直接用斜杠命令安装：
+
 ```text
 /plugin marketplace add lqiaoqing/agent-skills
-/plugin install painted-mv@lqiaoqing-agent-skills
-/plugin install kinetic-lyric-mv@lqiaoqing-agent-skills
+/plugin install <skill名>@lqiaoqing-agent-skills
 ```
+
+## Skill 清单
+
+| skill 名 | 一句话说明 | 主要依赖 | 目录 |
+|---|---|---|---|
+| `painted-mv` | 水彩手绘风动画 / 歌词 MV：p5.js + p5.brush 逐帧作画，测节拍、对齐歌词、写分镜后出片，支持中文毛笔字卡拉 OK | Node ≥ 22.6、ffmpeg、Chrome/Edge；歌词对齐可选 uv（faster-whisper） | [skills/painted-mv](skills/painted-mv/) |
+| `kinetic-lyric-mv` | three.js 卡点动态歌词 MV：着色器、逐字砸字、辉光与运动模糊，跟节拍同步，中文逐字排版，带核显低配预设 | Node ≥ 22.6、ffmpeg、Chrome/Edge、bun、uv / Python 3 | [skills/kinetic-lyric-mv](skills/kinetic-lyric-mv/) |
+
+各技能的上游来源和许可证见文末“许可证与致谢”和各文件夹里的 `NOTICE.md`。
 
 ## 其他安装方式
 
-### 方式一：Windows 一键（克隆 + 安装脚本）
+两个安装脚本都会**自动发现** `skills/` 下所有带 `SKILL.md` 的文件夹，不需要改脚本。
+
+### Windows（克隆 + 安装脚本）
 
 ```powershell
 git clone https://github.com/lqiaoqing/agent-skills.git
 cd agent-skills
-powershell -ExecutionPolicy Bypass -File .\install.ps1
+powershell -ExecutionPolicy Bypass -File .\install.ps1                 # 安装全部 skill
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -Only <skill名>  # 只装指定的，多个用逗号隔开
 ```
 
 默认同时装到 Claude Code（`%USERPROFILE%\.claude\skills\`）和 Codex（`%USERPROFILE%\.codex\skills\`，设置了 `CODEX_HOME`
@@ -61,42 +64,36 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 | 选项 | 作用 |
 |---|---|
 | `-Tool claude` / `-Tool codex` / `-Tool both`（默认） | 只装 Claude Code / 只装 Codex / 两个都装 |
+| `-Only <skill名>,<skill名>` | 只装指定的 skill（默认全部） |
+| `-List` | 列出可安装的 skill 名 |
 | `-Copy` | 复制文件而不是建联接（更新时需重新运行一次） |
-| `-Only painted-mv` | 只装某一个技能 |
 | `-Targets D:\别的\skills` | 装到自定义的 skills 目录 |
 | `-Uninstall` | 卸载本脚本装的技能 |
 
 目标位置已有同名文件夹时，会先改名为 `<名字>.bak-时间戳` 再安装。
 
-### 方式二：macOS / Linux / WSL
+### macOS / Linux / WSL
 
 ```bash
 git clone https://github.com/lqiaoqing/agent-skills.git && cd agent-skills && bash install.sh
-# bash install.sh --claude   只装 Claude Code      bash install.sh --codex   只装 Codex
-# bash install.sh --copy     复制而不是软链接      bash install.sh --uninstall  卸载
+# bash install.sh --only <skill名>,<skill名>   只装指定的      bash install.sh --list     列出可安装的 skill
+# bash install.sh --claude   只装 Claude Code             bash install.sh --codex    只装 Codex
+# bash install.sh --copy     复制而不是软链接             bash install.sh --uninstall  卸载
 ```
 
-### 方式三：手动安装
+### 手动安装
 
-把 `skills/painted-mv`、`skills/kinetic-lyric-mv` 整个文件夹复制到：
+把 `skills/<skill名>` 整个文件夹复制到：
 
 - Claude Code：`~/.claude/skills/`（Windows：`C:\Users\<用户名>\.claude\skills\`），或项目里的 `.claude/skills/`
 - Codex：`~/.codex/skills/`（Windows：`C:\Users\<用户名>\.codex\skills\`）
 
-复制后的结构应该是 `~/.claude/skills/painted-mv/SKILL.md`。
+复制后的结构应该是 `~/.claude/skills/<skill名>/SKILL.md`。
 
-### 方式四：Claude Code 插件市场
+### Claude Code 插件市场
 
-在 Claude Code 里执行：
-
-```
-/plugin marketplace add lqiaoqing/agent-skills
-/plugin install painted-mv@lqiaoqing-agent-skills
-/plugin install kinetic-lyric-mv@lqiaoqing-agent-skills
-```
-
-命令行写法：`claude plugin marketplace add lqiaoqing/agent-skills`，再 `claude plugin install painted-mv@lqiaoqing-agent-skills`。
-更新：`/plugin marketplace update lqiaoqing-agent-skills`。插件方式装的技能，名字会带插件前缀（例如 `painted-mv:painted-mv`）。
+斜杠命令见上文；命令行写法：`claude plugin marketplace add lqiaoqing/agent-skills`，再
+`claude plugin install <skill名>@lqiaoqing-agent-skills`。插件方式装的技能，名字会带插件前缀（例如 `<skill名>:<skill名>`）。
 
 装好后**重启 Claude Code / Codex**。
 
@@ -110,7 +107,7 @@ git clone https://github.com/lqiaoqing/agent-skills.git && cd agent-skills && ba
 
 | 依赖 | 用途 | Windows 免管理员安装 | macOS |
 |---|---|---|---|
-| Node.js ≥ 22.6 | 两个技能的渲染器 | [nodejs.org](https://nodejs.org) 或 `winget install OpenJS.NodeJS.LTS` | `brew install node` |
+| Node.js ≥ 22.6 | 渲染器（painted-mv、kinetic-lyric-mv） | [nodejs.org](https://nodejs.org) 或 `winget install OpenJS.NodeJS.LTS` | `brew install node` |
 | ffmpeg | 编码 MP4 | `winget install Gyan.FFmpeg --scope user` | `brew install ffmpeg` |
 | Chrome 或 Edge | headless 渲染（WebGL 走 ANGLE；Windows 默认用 D3D11，Intel 核显可用） | Windows 自带 Edge 就行 | Chrome |
 | bun | kinetic-lyric-mv 安装依赖和预览 | `winget install Oven-sh.Bun --scope user` | `brew install oven-sh/bun/bun` |
@@ -153,6 +150,15 @@ WebGL 跑在 `ANGLE (Intel(R) Arc(TM) Graphics, Direct3D11)` 上（不是软件�
 - painted-mv：草稿用 `--fps=12`、`--range=a:b`；`--frames` 并行且可断点续渲，核显 `--workers=2..4` 就够了。
 - 先检查用的是不是显卡：`node render.mjs --gpu`（painted）/ `node scripts/render.ts gpu`（kinetic），应显示你的 GPU，而不是 SwiftShader。
   有问题可以试 `--angle=d3d11on12` 或 `--angle=gl`。笔记本请插上电源。
+
+## 新增 skill（贡献者）
+
+1. 在 `skills/` 下新建文件夹 `skills/<skill名>/`，放入 `SKILL.md`，头信息里的 `name` 必须和文件夹名一致，并写好 `description`。
+2. 在上面的 [Skill 清单](#skill-清单) 表格里加一行（这是 README 里唯一需要写单个 skill 信息的地方）。
+3. 运行 `node scripts/sync-marketplace.mjs`，根据各 `SKILL.md` 头信息重新生成 `.claude-plugin/marketplace.json`
+   （已有条目的 category / keywords 等手动字段会保留）；`node scripts/sync-marketplace.mjs --check` 可检查是否已同步。
+
+安装脚本和 INSTALL_FOR_AGENTS.md 都会自动发现新文件夹，不用改。
 
 ## 许可证与致谢
 
