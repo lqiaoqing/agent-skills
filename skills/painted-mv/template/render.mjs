@@ -50,7 +50,11 @@ const CHROME = CHROMES.find(p => p && existsSync(p));
 if (!CHROME && !args.encode) { console.error('Chrome/Edge not found: pass --chrome=<path> or set CHROME_PATH'); process.exit(1); }
 const FFMPEG = args.ffmpeg || process.env.FFMPEG || 'ffmpeg';
 const SIZE = args.size ? String(args.size).toLowerCase().split('x').map(Number) : null;
-const scaleVf = SIZE ? ['-vf', `scale=${SIZE[0]}:${SIZE[1]}:flags=lanczos`] : [];
+// Frames are JPEGs, which decode as full-range ("pc"/yuvj) BT.601 YUV. `-pix_fmt yuv420p` alone keeps that range
+// (ffmpeg 7+ just tags it pc, ffprobe shows yuvj420p) and many browsers/players refuse or mis-show such files, so
+// convert to limited-range ("tv") BT.709 yuv420p explicitly and tag the stream to match.
+const scaleVf = ['-vf', `scale=${SIZE ? `${SIZE[0]}:${SIZE[1]}:` : ''}flags=lanczos:in_range=pc:out_range=tv:out_color_matrix=bt709,format=yuv420p,setparams=range=tv:colorspace=bt709:color_primaries=bt709:color_trc=bt709`];
+const pixArgs = ['-pix_fmt', 'yuv420p', '-color_range', 'tv', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709'];
 const fps = +(args.fps || 24), FRAMES_DIR = 'out/frames';
 const run = (cmd, a) => new Promise((ok, bad) => { const p = spawn(cmd, a, { stdio: 'inherit' }); p.on('error', e => bad(new Error(`cannot run ${cmd}: ${e.message} (install ffmpeg or pass --ffmpeg=<path>)`))); p.on('close', c => c ? bad(new Error(cmd + ' exited ' + c)) : ok()); });
 const times = s => String(s).split(',').map(Number);
@@ -66,7 +70,7 @@ if (args.encode) {
   console.log(`encoding ${n} frames → ${out}${audio ? ' with ' + audio : ''}`);
   await run(FFMPEG, ['-y', '-loglevel', 'error', '-stats', '-framerate', String(fps), '-i', `${FRAMES_DIR}/f%05d.jpg`,
     ...(audio ? ['-i', audio, '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-shortest'] : []), ...scaleVf,
-    '-c:v', 'libx264', '-preset', args.preset || 'slow', '-crf', String(args.crf || 17), '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out]);
+    '-c:v', 'libx264', '-preset', args.preset || 'slow', '-crf', String(args.crf || 17), ...pixArgs, '-movflags', '+faststart', out]);
   console.log('wrote ' + out);
   process.exit(0);
 }
@@ -166,7 +170,7 @@ if (args.gpu) {
   const out = args.out || 'out/clip.mp4'; mkdirSync(dirname(out), { recursive: true });
   const ff = spawn(FFMPEG, ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(fps), '-c:v', 'mjpeg', '-i', '-',
     ...(audio ? ['-ss', String(a), '-t', String(b - a), '-i', audio, '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-shortest'] : []), ...scaleVf,
-    '-c:v', 'libx264', '-preset', args.preset || 'medium', '-crf', String(args.crf || 18), '-pix_fmt', 'yuv420p', '-movflags', '+faststart', out],
+    '-c:v', 'libx264', '-preset', args.preset || 'medium', '-crf', String(args.crf || 18), ...pixArgs, '-movflags', '+faststart', out],
     { stdio: ['pipe', 'inherit', 'inherit'] });
   ff.on('error', e => { console.error(`cannot run ${FFMPEG}: ${e.message} (install ffmpeg or pass --ffmpeg=<path>)`); process.exit(1); });
   const n = Math.round((b - a) * fps), start = Date.now();
