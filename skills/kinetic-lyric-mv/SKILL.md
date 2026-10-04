@@ -52,6 +52,12 @@ may be `py` or a full path; always use **node** (not bun) for `scripts/render.ts
 - Cost scales with pixels × sub-frames. Integrated GPUs: draft with `--profile low`, final with `--profile mid`;
   only use `--profile high` / `--samples auto` up to 324 / `--scale 2` on a discrete GPU. Use `perf` to measure ms/frame.
 - Behind a proxy: `$env:HTTPS_PROXY="http://127.0.0.1:7890"` (your proxy port) before `bun install` / `uv run` / whisper downloads.
+- `python` on a fresh Windows is often the Microsoft Store stub: run the scaffold as
+  `uv run --python 3.12 python $SKILL/scripts/new_project.py …` (or `py`). A winget bun has no `bunx`: use `bun x vite`.
+- Tempo: librosa can lock onto a relative of the real tempo (a 165 BPM drum'n'bass mix came out as 110). Compare with
+  the song's stated BPM; rerun `analysis/analyze_music.py <track> --bpm 165` (or `new_project.py --audio … --bpm 165`).
+- Sung lyrics: `words.py` prints `matched N/M known words`; below half, the timings are guesses (try `--model medium`
+  or a dry vocal stem). It now keeps whisper's VAD off for singing (`--vad` only for clean voiceovers).
 
 ## Upstream guide (super-motion-graphics)
 
@@ -103,7 +109,7 @@ python $SKILL/scripts/new_project.py ./video --title "…" --audio path/to/track
 
 This creates `video/{app,analysis,docs,out}`, runs `bun install`, and writes `app/public/data/audio.json`.
 Add word timings with `cd video/analysis && uv run --extra words python words.py <audio> --text lines.txt`.
-Check the beat grid: run the preview (`cd video/app && bunx vite`), play it and watch the beat counter
+Check the beat grid: run the preview (`cd video/app && bun x vite`), play it and watch the beat counter
 against the music. Add `--plot` to `analyze_music.py` for a QA chart.
 
 ## 3. Treatment (the step that makes it good)

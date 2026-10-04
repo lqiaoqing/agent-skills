@@ -586,15 +586,18 @@ function feel(name, t, over = {}) {
 // under the squint. Then a take fires (a squash-stretch the size of the new emotion's `take`), the body settles into
 // its new motion with overshoot, colour, blush and gloom cross-fade, and the new emote pops in. o.take scales every take.
 // Spread the result into clawd() and add any other pose: clawd(x, y, u, { ...emotions(t, keys), view: 'q' }).
+// A recoloured character (a robot, a guest) passes its own colours as o.base = { col, dk, lt }: the colour cross-fade
+// then runs between ITS tinted colours instead of fading through the default clay.
 function emotions(t, keys, o = {}) {
   let i = 0; while (i + 1 < keys.length && t >= keys[i + 1][0]) i++;
-  const [tc, name, over] = keys[i], age = t - tc, cur = feel(name, t, over);
+  const base = o.base || {};
+  const [tc, name, over] = keys[i], age = t - tc, cur = feel(name, t, { ...base, ...over });
   const tn = i + 1 < keys.length ? keys[i + 1][0] : Infinity, tkS = o.take ?? 1;
   const E = EMO[name] || EMO.neutral;
   let squint = cur.squint || 0;
   if (tn - t < .1) squint = Math.max(squint, 1 - (tn - t) / .1);
   if (i > 0 && age < .14) squint = Math.max(squint, 1 - age / .14);
-  const prev = i > 0 ? feel(keys[i - 1][1], t, keys[i - 1][2]) : null;
+  const prev = i > 0 ? feel(keys[i - 1][1], t, { ...base, ...keys[i - 1][2] }) : null;
   if (prev && age < .5) {
     const base = { dy: 0, sq: 0, aL: .2, aR: .2, rot: 0, dx: 0, lookX: 0, lookY: 0 };
     const k = backOut(seg(age, 0, .4)), kc = ease(seg(age, 0, .3));

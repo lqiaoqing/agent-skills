@@ -119,7 +119,10 @@ page still paints 1920×1080). Report output path, length, ms/frame; check with 
   separate element. Don't name globals after p5's (`line`, `text`, `color`, `scale`…). Guard NaN geometry.
 - Cost = number of fills/strokes; aim ≤ ~1.5–2.5 s/frame (log prints ms/frame).
 - Karaoke: `src/karaoke.js` draws `LY` from `src/lyrics.js` in the bundled **Ma Shan Zheng** brush font (OFL), falling
-  back to KaiTi / Microsoft YaHei. Per-line opts: `{ sing, hold, pun: { from, to, at } }`. SFX letters
+  back to KaiTi / Microsoft YaHei; lines without CJK (English…) use the bundled Shantell Sans. Per-line opts:
+  `{ sing, hold, pun: { from, to, at }, sub }`. **Bilingual karaoke**: `sub` is a smaller translation row under the sung
+  line; `lyrics_to_ly.mjs` fills it from an SRT/VTT cue with two text lines (one CJK, one not), from a second LRC line
+  with the same timestamp, or from a TSV 4th column. SFX letters
   (`core.js` letters) fall back to Ma Shan Zheng for Chinese.
 
 ## Windows notes (this fork)

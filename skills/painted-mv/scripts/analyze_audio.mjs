@@ -4,7 +4,8 @@
 // helps find the song's sections. Needs ffmpeg on PATH.
 //   node analyze_audio.mjs <audio> [--json] [--bpm=<force tempo>] [--min=60] [--max=200]
 import { spawnSync } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { realpathSync } from 'node:fs';
 
 const SR = 22050, N = 1024, HOP = 256, FPS = SR / HOP;
 const LAT = .014;   // the detector fires this much before a sharp hit (measured on a synthetic click track)
@@ -177,7 +178,10 @@ export function report(a) {
   return L.join('\n');
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+// run as a script? Compare real paths: through an installed symlink / junction (~/.claude/skills/... → the clone)
+// import.meta.url is the resolved target while argv[1] is the link, so a plain URL comparison silently did nothing.
+const isMain = () => { try { return realpathSync(fileURLToPath(import.meta.url)) === realpathSync(process.argv[1]); } catch { return false; } };
+if (isMain()) {
   const args = Object.fromEntries(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v ?? true]; }));
   const file = process.argv.slice(2).find(a => !a.startsWith('--'));
   if (!file) { console.error('usage: node analyze_audio.mjs <audio> [--json] [--bpm=N] [--min=60] [--max=200]'); process.exit(2); }

@@ -2,10 +2,13 @@
 // lyrics_to_ly.mjs: turn timed lyrics into the engine's src/lyrics.js (const LY = [[start, end, "text"], ...]).
 // Reads LRC, SRT, VTT, TSV ("start<TAB>end<TAB>text" or "start<TAB>text", seconds or mm:ss.xx) and JSON
 // ([[start, end, text]] or [{start, end, text}]). Plain untimed text is refused: time it with align_lyrics.py first.
+// Bilingual lyrics → opts.sub (a translation row under the sung line): an SRT/VTT cue with two text lines where only
+// one is CJK, a second LRC line with the same timestamp (the usual translated-LRC layout), a JSON row's 4th item / .sub,
+// or a TSV 4th column.
 //   node lyrics_to_ly.mjs <file> [--out=src/lyrics.js] [--duration=<song seconds>] [--shift=<seconds, + = later>]
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { basename } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const CJK = /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff\uac00-\ud7af]/g;
 const cjkCount = s => (s.match(CJK) || []).length;
@@ -38,7 +41,11 @@ function parseLRC(text, warn) {
   const out = [];
   for (const r of rows) {
     const prev = out[out.length - 1];
-    if (prev && Math.abs(prev.start - r.start) < .005 && r.text) { if (r.text !== prev.text) warn(`dropped a second line at ${r.start.toFixed(2)}s (translation?): "${r.text}"`); continue; }
+    if (prev && Math.abs(prev.start - r.start) < .005 && r.text) {
+      if (r.text === prev.text) continue;
+      if (prev.sub == null) prev.sub = r.text; else warn(`dropped a third line at ${r.start.toFixed(2)}s: "${r.text}"`);
+      continue;
+    }
     if (!r.text) { if (prev && prev.end == null) prev.end = r.start; continue; }
     out.push({ start: r.start, end: null, text: r.text });
   }
@@ -52,8 +59,11 @@ function parseCues(text) {   // SRT and VTT
     const i = lines.findIndex(l => l.includes('-->'));
     if (i < 0) continue;
     const [a, b] = lines[i].split('-->').map(s => s.trim().split(/\s+/)[0]);
-    const txt = clean(lines.slice(i + 1).join(' '));
-    if (txt) out.push({ start: clock(a), end: clock(b), text: txt });
+    const body = lines.slice(i + 1).map(clean).filter(Boolean);
+    // two rows, one CJK and one not: the second is a translation (bilingual subtitles); otherwise a wrapped line
+    const bi = body.length === 2 && (cjkCount(body[0]) > 0) !== (cjkCount(body[1]) > 0);
+    const txt = bi ? body[0] : clean(body.join(' '));
+    if (txt) out.push({ start: clock(a), end: clock(b), text: txt, ...(bi ? { sub: body[1] } : {}) });
   }
   return out;
 }
@@ -63,14 +73,15 @@ function parseTSV(text) {
   for (const raw of text.split(/\r?\n/)) {
     if (!raw.trim() || raw.trim().startsWith('#')) continue;
     const c = raw.split('\t');
-    if (c.length >= 3 && !isNaN(clock(c[1]))) out.push({ start: clock(c[0]), end: clock(c[1]), text: clean(c.slice(2).join(' ')) });
+    if (c.length >= 3 && !isNaN(clock(c[1]))) out.push({ start: clock(c[0]), end: clock(c[1]), text: clean(c[2]), ...(c[3] && clean(c[3]) ? { sub: clean(c.slice(3).join(' ')) } : {}) });
     else if (c.length >= 2) out.push({ start: clock(c[0]), end: null, text: clean(c.slice(1).join(' ')) });
   }
   return out;
 }
 
 function parseJSON(text) {
-  return JSON.parse(text).map(r => Array.isArray(r) ? { start: +r[0], end: r[1] == null ? null : +r[1], text: clean(String(r[2])) } : { start: +r.start, end: r.end == null ? null : +r.end, text: clean(String(r.text)) });
+  const sub = v => typeof v === 'string' && clean(v) ? { sub: clean(v) } : v && typeof v === 'object' && v.sub ? { sub: clean(String(v.sub)) } : {};
+  return JSON.parse(text).map(r => Array.isArray(r) ? { start: +r[0], end: r[1] == null ? null : +r[1], text: clean(String(r[2])), ...sub(r[3]) } : { start: +r.start, end: r.end == null ? null : +r.end, text: clean(String(r.text)), ...sub(r) });
 }
 
 export function parseLyrics(text, name = '', o = {}) {
@@ -94,18 +105,21 @@ export function parseLyrics(text, name = '', o = {}) {
     if (r.start < 0 || r.start >= dur) { warn(`dropped "${r.text}": starts at ${r.start.toFixed(2)}s, outside the song`); return; }
     if (end - r.start < .6) warn(`"${r.text}" is only ${(end - r.start).toFixed(2)}s long; its karaoke bar will barely open`);
     if (widthPx(r.text) > 1700) warn(`"${r.text}" is too wide for the karaoke bar (~${widthPx(r.text)}px of 1800); split it into two timed lines`);
-    ly.push([+r.start.toFixed(2), +end.toFixed(2), r.text]);
+    ly.push([+r.start.toFixed(2), +end.toFixed(2), r.text, ...(r.sub ? [{ sub: r.sub }] : [])]);
   });
   if (ly.length && ly[0][0] < 1) warn(`the first line starts at ${ly[0][0]}s: the opening shot has almost no time before the karaoke covers the bottom band`);
   return { ly, warnings };
 }
 
 export function lyToJs(ly, source = '') {
-  const rows = ly.map(([a, b, t]) => `  [${a}, ${b}, ${JSON.stringify(t)}]`);
-  return `// lyrics.js: [start, end, text], generated${source ? ` from ${source}` : ''} by lyrics_to_ly.mjs; regenerate it instead of editing by hand.\nconst LY = [\n${rows.join(',\n')}\n];\n`;
+  const rows = ly.map(([a, b, t, o]) => `  [${a}, ${b}, ${JSON.stringify(t)}${o ? `, ${JSON.stringify(o)}` : ''}]`);
+  return `// lyrics.js: [start, end, text, opts?], generated${source ? ` from ${source}` : ''} by lyrics_to_ly.mjs; regenerate it instead of editing by hand.\nconst LY = [\n${rows.join(',\n')}\n];\n`;
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+// run as a script? Compare real paths: through an installed symlink / junction (~/.claude/skills/... → the clone)
+// import.meta.url is the resolved target while argv[1] is the link, so a plain URL comparison silently did nothing.
+const isMain = () => { try { return realpathSync(fileURLToPath(import.meta.url)) === realpathSync(process.argv[1]); } catch { return false; } };
+if (isMain()) {
   const args = Object.fromEntries(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v ?? true]; }));
   const file = process.argv.slice(2).find(a => !a.startsWith('--'));
   if (!file) { console.error('usage: node lyrics_to_ly.mjs <lyrics.lrc|.srt|.vtt|.tsv|.json> [--out=src/lyrics.js] [--duration=S] [--shift=S]'); process.exit(2); }

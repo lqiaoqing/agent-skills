@@ -20,6 +20,7 @@ analyze_music.py --stems). The reference project used CTC forced alignment cross
 import argparse
 import difflib
 import json
+import os
 import re
 from pathlib import Path
 
@@ -55,13 +56,38 @@ def split_cjk(words):
     return out
 
 
-def transcribe(path, model, lang=None):
+def load_audio(path, sr=16000):
+    """Decode with the ffmpeg CLI into 16 kHz mono float32. faster-whisper's own decoder goes through PyAV, whose
+    releases keep changing its API (av>=16 dropped `metadata_errors`, which faster-whisper 1.2 still passes); ffmpeg is a
+    requirement of this skill anyway. Falls back to the path (PyAV) when ffmpeg is missing."""
+    import shutil
+    import subprocess
+    ff = os.environ.get('FFMPEG') or shutil.which('ffmpeg')
+    if not ff:
+        return str(path)
+    import numpy as np
+    raw = subprocess.run([ff, '-nostdin', '-v', 'error', '-i', str(path), '-f', 's16le', '-ac', '1', '-ar', str(sr), '-'],
+                         capture_output=True, check=True).stdout
+    return np.frombuffer(raw, np.int16).astype(np.float32) / 32768.0
+
+
+def transcribe(path, model, lang=None, vad=False):
     from faster_whisper import WhisperModel
     m = WhisperModel(model, device="auto", compute_type="auto")
-    segs, _ = m.transcribe(str(path), word_timestamps=True, vad_filter=True, language=lang)
+    # Sung vocals under a mix: the VAD and the no-speech detector both throw singing away (a d'n'b chorus came back as
+    # one word), so they are off unless --vad (clean voiceovers). condition_on_previous_text=False stops one misheard
+    # window from derailing the rest.
+    segs, _ = m.transcribe(load_audio(path), word_timestamps=True, vad_filter=vad, language=lang, beam_size=5,
+                           condition_on_previous_text=False, **({} if vad else {"no_speech_threshold": None}))
     segs = list(segs)
     words = [{"w": w.word.strip(), "start": round(w.start, 3), "end": round(w.end, 3), "conf": round(w.probability, 3)} for s in segs for w in (s.words or [])]
     words = split_cjk(words)
+    # Whisper stretches the first word after a pause back over the pause ("Age" starting a second early): keep the
+    # word's end and cap its length (~0.7 s per CJK character, ~0.4 s + 0.1 s per letter otherwise)
+    for w in words:
+        n = len(w["w"]); cjk = len(CJK.findall(w["w"]))
+        cap = .7 * cjk + ((.4 + .1 * (n - cjk)) if n > cjk else 0)
+        if w["end"] - w["start"] > cap: w["start"] = round(w["end"] - cap, 3)
     lines = [[w for w in words if s.start - 1e-3 <= w["start"] < s.end + 1e-3] for s in segs]
     return words, [l for l in lines if l]
 
@@ -99,11 +125,18 @@ def main():
     ap.add_argument("--text", help="known lines (one per line) to align instead of the raw transcript")
     ap.add_argument("--model", default="small")
     ap.add_argument("--lang", default=None, help="language code (zh, en, ...); detected when omitted")
+    ap.add_argument("--vad", action="store_true", help="voice-activity filter: good for speech, drops singing")
     a = ap.parse_args()
-    words, seglines = transcribe(Path(a.audio), a.model, a.lang)
+    words, seglines = transcribe(Path(a.audio), a.model, a.lang, a.vad)
+    print(f"heard {len(words)} words")
     if a.text:
         known = [l.strip() for l in Path(a.text).read_text(encoding="utf8").splitlines() if l.strip()]
         lines = align(known, words)
+        n = sum(len(l["words"]) for l in lines)
+        hit = sum(1 for l in lines for w in l["words"] if w["conf"] > 0)
+        print(f"matched {hit}/{n} known words to the recording" + ("" if hit >= .5 * n else
+              "  <- WARNING: most timings are interpolated guesses. Try --model medium, an isolated vocal stem "
+              "(analyze_music.py --stems / a dry vocal), or timed lyrics via lyrics_tool.py"))
     else:
         join = lambda ws: "".join((("" if (i == 0 or CJK.match(w["w"]) and CJK.match(ws[i - 1]["w"])) else " ") + w["w"]) for i, w in enumerate(ws))
         lines = [{"text": join(l), "start": l[0]["start"], "end": l[-1]["end"], "words": l} for l in seglines]

@@ -14,7 +14,7 @@ hand-tuned to one song (bar-numbered section map, stem timing offsets). Check th
 (--plot) and the preview's beat counter against the music; if bar 1 lands on the wrong beat
 (common with a kick on every beat) rerun with --downbeat-offset N. Hand-edit `sections` names if you like.
 
-  uv run python analyze_music.py path/to/track.mp3 [--stems] [--sections N] [--plot]
+  uv run python analyze_music.py path/to/track.mp3 [--stems] [--sections N] [--plot] [--bpm N] [--downbeat-offset N]
 """
 import argparse
 import json
@@ -58,7 +58,20 @@ def onsets(y, n, delta=0.07, wait=0.09):
     return [[round(float(i) / FPS, 3), round(float(min(1.0, o[i])), 3)] for i in pk if i < n]
 
 
-def beat_grid(y, duration):
+def beat_grid(y, duration, bpm=None):
+    if bpm:
+        # forced tempo (librosa often locks onto a 2:3 or 1:2 relative, e.g. 110 for a 165 BPM drum'n'bass mix):
+        # keep the period, fit only the phase, as the grid offset with the most onset energy on its beats
+        period = 60.0 / bpm
+        o = librosa.onset.onset_strength(y=y, sr=SR, hop_length=HOP)
+        fps = SR / HOP
+        def energy(ph):
+            idx = (np.arange(ph, duration, period) * fps).astype(int)
+            idx = idx[idx < len(o)]
+            return float(o[idx].sum())
+        phases = np.arange(0.0, period, 0.005)
+        phase = float(phases[int(np.argmax([energy(p) for p in phases]))])
+        return np.arange(phase, duration, period), float(bpm)
     tempo, bt = librosa.beat.beat_track(y=y, sr=SR, hop_length=HOP, units="time", tightness=120)
     bt = np.asarray(bt, dtype=float)
     tempo = float(np.atleast_1d(tempo)[0])
@@ -126,6 +139,7 @@ def main():
     ap.add_argument("--sections", type=int, default=0, help="target section count (default: ~1 per 20 s)")
     ap.add_argument("--beats-per-bar", type=int, default=4)
     ap.add_argument("--plot", action="store_true", help="write analysis/qa.png")
+    ap.add_argument("--bpm", type=float, default=None, help="force the tempo when librosa picks a relative of it (e.g. 110 instead of 165); only the phase is fitted")
     ap.add_argument("--downbeat-offset", type=int, default=None, help="force which beat (0..3) starts bar 1, when the guess is off (e.g. a kick on every beat)")
     a = ap.parse_args()
 
@@ -146,7 +160,7 @@ def main():
     feats = {"rms": env(y, n), "low": env(low, n), "mid": env(mid, n), "high": env(high, n),
              "drums": env(drums, n), "bass": env(bass, n), "vocal": env(vocal, n), "other": env(other, n)}
 
-    beats, bpm = beat_grid(y, duration)
+    beats, bpm = beat_grid(y, duration, a.bpm)
     ph = downbeat_phase(beats, feats["low"], a.beats_per_bar)
     if a.downbeat_offset is not None:
         ph = a.downbeat_offset % a.beats_per_bar

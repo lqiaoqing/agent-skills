@@ -49,6 +49,21 @@ def read_lines(path):
     return lines
 
 
+def load_audio(path, sr=16000):
+    """Decode with the ffmpeg CLI into 16 kHz mono float32. faster-whisper's own decoder goes through PyAV, whose
+    releases keep changing its API (av>=16 dropped `metadata_errors`, which faster-whisper 1.2 still passes); ffmpeg is a
+    requirement of this skill anyway. Falls back to the path (PyAV) when ffmpeg is missing."""
+    import shutil
+    import subprocess
+    ff = os.environ.get('FFMPEG') or shutil.which('ffmpeg')
+    if not ff:
+        return str(path)
+    import numpy as np
+    raw = subprocess.run([ff, '-nostdin', '-v', 'error', '-i', str(path), '-f', 's16le', '-ac', '1', '-ar', str(sr), '-'],
+                         capture_output=True, check=True).stdout
+    return np.frombuffer(raw, np.int16).astype(np.float32) / 32768.0
+
+
 def transcribe(audio, model_name, lang, device, hint):
     from faster_whisper import WhisperModel
     model = WhisperModel(model_name, device=device, compute_type='int8' if device in ('cpu', 'auto') else 'float16',
@@ -56,7 +71,7 @@ def transcribe(audio, model_name, lang, device, hint):
     # Music fools the no-speech detector, and one skipped window loses every line after it: never skip. `hotwords`
     # (only with --prompt) re-primes every 30 s window with the lyrics; it helps with odd words but can make the model
     # recite the whole lyric sheet over an instrumental, so it is off by default.
-    segments, info = model.transcribe(audio, language=lang, word_timestamps=True, vad_filter=False, beam_size=5,
+    segments, info = model.transcribe(load_audio(audio), language=lang, word_timestamps=True, vad_filter=False, beam_size=5,
                                       condition_on_previous_text=False, no_speech_threshold=None, hotwords=hint)
     words = [(w.start, w.end, w.word) for s in segments for w in (s.words or [])]
     return words, info

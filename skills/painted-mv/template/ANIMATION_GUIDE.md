@@ -373,6 +373,8 @@ clawd(x, y, u, emotions(t, [[0, 'sleepy'], [1.9, 'surprised', { lookX: .8 }], [2
 
 - **`emotions(t, keys)`** is how moods change in a shot. Around each key it squints and squashes just before the change (anticipation), swaps the face under the squint, and fires a take sized to the new emotion. The body then settles into the new motion with overshoot, colour cross-fades and the new emote pops in.
   - `emotions(t, keys, { take: .5 })` scales every take.
+  - A recoloured character must pass its colours as `emotions(t, keys, { base: { col, dk, lt } })`; otherwise every
+    mood change cross-fades its body through the default clay for half a second.
   - The third element of a key overrides fields for that stretch (e.g. `{ lookX: .8, emote: 'music' }`).
 - To make a new emotion, add an entry to `EMO` in clawd.js. It needs eyes, mouth, optional tint/blush/gloom/lid/emote, `take` (reaction size) and `body(t)` (its idle motion, locked to the beat through `_b(t)`).
 

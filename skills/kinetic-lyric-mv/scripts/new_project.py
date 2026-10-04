@@ -1,6 +1,6 @@
 """Scaffold a super-motion-graphics project.
 
-  python new_project.py <dir> [--title "My video"] [--audio track.mp3 [--stems]] [--bpm 120 --duration 20] [--no-install]
+  python new_project.py <dir> [--title "My video"] [--audio track.mp3 [--stems] [--bpm N]] [--bpm 120 --duration 20] [--no-install]
                         [--lyrics song.lrc|lines.tsv]            (timed lines -> per-character lyrics.json, no whisper)
                         [--words lines.txt [--lang zh]]          (plain lyrics aligned with faster-whisper)
 
@@ -36,7 +36,7 @@ def main():
     ap.add_argument("--title", default="super motion graphics")
     ap.add_argument("--audio")
     ap.add_argument("--stems", action="store_true")
-    ap.add_argument("--bpm", type=float, default=120)
+    ap.add_argument("--bpm", type=float, default=None, help="silent: grid tempo (default 120); with --audio: force the analysed tempo")
     ap.add_argument("--duration", type=float, default=12)
     ap.add_argument("--no-install", action="store_true")
     ap.add_argument("--lyrics", help="timed lyrics (.lrc or start<TAB>end<TAB>text .tsv) -> app/public/data/lyrics.json")
@@ -64,15 +64,15 @@ def main():
         run(["bun", "install"], dst / "app")
     if a.audio:
         track = Path(a.audio).resolve()
-        run(["uv", "run", "--project", ".", *(["--extra", "stems"] if a.stems else []), "python", "analyze_music.py", track, *(["--stems"] if a.stems else [])], dst / "analysis")
+        run(["uv", "run", "--project", ".", *(["--extra", "stems"] if a.stems else []), "python", "analyze_music.py", track, *(["--stems"] if a.stems else []), *(["--bpm", a.bpm] if a.bpm else [])], dst / "analysis")
     else:
-        run([sys.executable, "beatgrid.py", "--bpm", a.bpm, "--duration", a.duration], dst / "analysis")
+        run([sys.executable, "beatgrid.py", "--bpm", a.bpm or 120, "--duration", a.duration], dst / "analysis")
     if a.lyrics:
         run([sys.executable, "lyrics_tool.py", Path(a.lyrics).resolve()], dst / "analysis")
     elif a.words and a.audio:
         run(["uv", "run", "--project", ".", "--extra", "words", "--with", "zhconv", "python", "words.py", Path(a.audio).resolve(), "--text", Path(a.words).resolve(), *(["--lang", a.lang] if a.lang else [])], dst / "analysis")
     app = dst / "app"
-    print(f"\nready: {dst}\n  preview:  cd \"{app}\" && bunx vite     (http://localhost:5173)\n"
+    print(f"\nready: {dst}\n  preview:  cd \"{app}\" && bun x vite     (http://localhost:5173)\n"
           f"  gpu:      cd \"{app}\" && node scripts/render.ts gpu      (must name your GPU, not SwiftShader)\n"
           f"  stills:   cd \"{app}\" && node scripts/render.ts stills --t 1,4,8 --out ../out/stills\n"
           f"  video:    cd \"{app}\" && node scripts/render.ts video --out ../out/video.mp4            (default --profile low: 720p30)\n"
