@@ -1,0 +1,17 @@
+[project]
+name = "smg-analysis"
+version = "0.1.0"
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "librosa>=0.10",
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "soundfile>=0.12",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+# real stems for drums/bass/vocal envelopes and onsets (heavy: torch)
+stems = ["demucs>=4.0.1"]
+# word timings for lyric / voiceover sync
+words = ["faster-whisper>=1.0"]
