@@ -9,7 +9,42 @@
 | [`painted-mv`](skills/painted-mv/) | **水彩手绘风动画 / 歌词 MV**（PDoomVideo 风格）：p5.js + p5.brush 逐帧画水彩和墨线，headless Chrome 渲染，ffmpeg 合成。歌曲驱动流程：测节拍 → faster-whisper 对齐歌词 → 按歌词写分镜 → 逐章作画 → 联系表自查 → 出片；中文毛笔字卡拉 OK | [ClaudeAnimationBase](https://github.com/JohnHeibel/ClaudeAnimationBase)、[opus-video-skills](https://github.com/tuzhechen2005/opus-video-skills) `painted-animation`、[paint-mv-skills](https://github.com/lintsinghua/paint-mv-skills) 的流程与脚本 |
 | [`kinetic-lyric-mv`](skills/kinetic-lyric-mv/) | **three.js 卡点动态歌词 MV**（[mexicat/pdoom-video](https://github.com/mexicat/pdoom-video) 风格）：着色器、刻线、逐字砸字、辉光、颗粒、子帧运动模糊，与节拍和逐字歌词同步；中文逐字排版（思源黑体 Noto Sans SC），核显低配预设 | [super-motion-graphics](https://github.com/Dakota1-1/super-motion-graphics)（移植自 pdoom-video） |
 
-## 安装
+## 一句话安装（推荐）
+
+把下面任意一句粘贴到 **Claude Code / Codex / Cursor 等智能体**的对话框里，它会读取安装说明并替你完成安装（Windows、macOS、Linux 都适用）。
+
+只装 painted-mv（水彩 MV）：
+```text
+请按 https://raw.githubusercontent.com/lqiaoqing/agent-skills/main/INSTALL_FOR_AGENTS.md 的步骤，把 lqiaoqing/agent-skills 里的 painted-mv skill 安装到我的 Claude Code。
+```
+
+只装 kinetic-lyric-mv（动态歌词）：
+```text
+请按 https://raw.githubusercontent.com/lqiaoqing/agent-skills/main/INSTALL_FOR_AGENTS.md 的步骤，把 lqiaoqing/agent-skills 里的 kinetic-lyric-mv skill 安装到我的 Claude Code。
+```
+
+两个都装：
+```text
+请按 https://raw.githubusercontent.com/lqiaoqing/agent-skills/main/INSTALL_FOR_AGENTS.md 的步骤，把 lqiaoqing/agent-skills 里的 painted-mv 和 kinetic-lyric-mv 两个 skill 安装到我的 Claude Code。
+```
+
+装给 Codex：把句末的“Claude Code”换成“Codex”；两个工具都要装就写“Claude Code 和 Codex”。例如：
+```text
+请按 https://raw.githubusercontent.com/lqiaoqing/agent-skills/main/INSTALL_FOR_AGENTS.md 的步骤，把 lqiaoqing/agent-skills 里的全部 skill 安装到我的 Claude Code 和 Codex。
+```
+
+智能体会：克隆仓库到 `~/.agent-skills/agent-skills` 并运行安装脚本（没有 git 就下载 zip 解压），检查 `SKILL.md` 是否到位；
+遇到同名的其他技能会先问你；它可以帮你检查依赖，但不会擅自安装系统软件。装完重启 Claude Code / Codex 即可。
+说明原文：[INSTALL_FOR_AGENTS.md](INSTALL_FOR_AGENTS.md)。
+
+Claude Code 也可以直接用斜杠命令安装：
+```text
+/plugin marketplace add lqiaoqing/agent-skills
+/plugin install painted-mv@lqiaoqing-agent-skills
+/plugin install kinetic-lyric-mv@lqiaoqing-agent-skills
+```
+
+## 其他安装方式
 
 ### 方式一：Windows 一键（克隆 + 安装脚本）
 
@@ -36,9 +71,9 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 ### 方式二：macOS / Linux / WSL
 
 ```bash
-git clone https://github.com/lqiaoqing/agent-skills.git && cd agent-skills && ./install.sh
-# ./install.sh --claude   只装 Claude Code      ./install.sh --codex   只装 Codex
-# ./install.sh --copy     复制而不是软链接      ./install.sh --uninstall  卸载
+git clone https://github.com/lqiaoqing/agent-skills.git && cd agent-skills && bash install.sh
+# bash install.sh --claude   只装 Claude Code      bash install.sh --codex   只装 Codex
+# bash install.sh --copy     复制而不是软链接      bash install.sh --uninstall  卸载
 ```
 
 ### 方式三：手动安装
