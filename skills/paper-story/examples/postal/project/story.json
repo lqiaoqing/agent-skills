@@ -1,0 +1,8 @@
+{"title":"星星的回信","mode":"subs","voice":"zh-CN-XiaoxiaoNeural","lead":0,"tail":0,"subtitles":true,"scenes":[
+{"id":"cover","duration":4,"notes":"红棕皮面纸艺书，暖灯光，烫金标题。","lines":[]},
+{"id":"mail","duration":6,"notes":"清晨小镇。邮差打开信封，发现失去光芒的小星星。","lines":[{"text":"小邮差收到一封没有地址的信。","duration":3},{"text":"信封里，藏着一颗迷路的小星星。","duration":3}]},
+{"id":"forest","duration":7,"notes":"邮差带着星星穿过森林。镜头向右跟随，叶片和信纸随风动。","lines":[{"text":"他带着星星，走过会唱歌的森林。","duration":7}]},
+{"id":"bridge","duration":7,"notes":"月下小桥。邮差将信纸折成船，星星乘着纸船升上夜空。","lines":[{"text":"他们把信折成纸船，让月光送它回家。","duration":7}]},
+{"id":"home","duration":6,"notes":"同一座小镇，金色晨光。发光的回信飘来，邮差读信，笑着抬头。","lines":[{"text":"第二天，一封闪亮的回信落在门前。","duration":6}]},
+{"id":"ending","duration":2,"notes":"回到封面，书合上。纸星星作为书签留下。","lines":[{"text":"每一份善意，都会找到回来的路。","duration":2}]}
+]}

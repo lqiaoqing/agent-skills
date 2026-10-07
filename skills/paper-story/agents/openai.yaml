@@ -1,0 +1,4 @@
+interface:
+  display_name: "纸艺故事动画"
+  short_description: "从故事或歌曲制作纸艺立体绘本动画，提供角色表演、分镜检查与视频出片"
+  default_prompt: "用 $paper-story 制作一支约 30 秒的纸艺故事动画，输出 MP4 和可复现源码。"

@@ -42,6 +42,7 @@ Claude Code 也可以直接用斜杠命令安装：
 | `painted-mv` | 水彩手绘风动画 / 歌词 MV：p5.js + p5.brush 逐帧作画，测节拍、对齐歌词、写分镜后出片，支持中文毛笔字卡拉 OK | Node ≥ 22.6、ffmpeg、Chrome/Edge；歌词对齐可选 uv（faster-whisper） | [skills/painted-mv](skills/painted-mv/) |
 | `painted-story` | 水彩手绘风故事动画：给故事、剧本或只给主题（先写脚本），用 AI 配音（免费 edge-tts）+ 字幕、纯字幕或你自己的录音（whisper 自动对齐），可加背景音乐；同 painted-mv 的引擎，独立安装 | Node ≥ 22.6、ffmpeg、Chrome/Edge、uv（edge-tts / faster-whisper） | [skills/painted-story](skills/painted-story/) |
 | `kinetic-lyric-mv` | three.js 卡点动态歌词 MV：着色器、逐字砸字、辉光与运动模糊，跟节拍同步，中文逐字排版，带核显低配预设 | Node ≥ 22.6、ffmpeg、Chrome/Edge、bun、uv / Python 3 | [skills/kinetic-lyric-mv](skills/kinetic-lyric-mv/) |
+| `paper-story` | 纸艺剪纸 / 立体绘本故事动画与 MV：关节纸偶、分层视差、纸影、动态文字与连贯转场，支持歌曲、旁白、字幕或无声故事；附完整示例和可选 Fantasy 素材 | Node.js、Chrome/Edge；FFmpeg 随项目依赖安装，在线配音按需配置 | [skills/paper-story](skills/paper-story/) |
 
 各技能的上游来源和许可证见文末“许可证与致谢”和各文件夹里的 `NOTICE.md`。
 

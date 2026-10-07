@@ -6,7 +6,7 @@
     "url": "https://github.com/lqiaoqing"
   },
   "metadata": {
-    "description": "Code-rendered video skills adapted for Chinese and Windows laptops: painted watercolour MVs and story animations (p5.brush, TTS narration) and three.js kinetic lyric MVs."
+    "description": "Code-rendered video skills adapted for Chinese and Windows laptops: painted watercolour MVs and story animations (p5.brush, TTS narration), layered paper-cut storybooks (Canvas 2D), and three.js kinetic lyric MVs."
   },
   "plugins": [
     {
@@ -70,6 +70,26 @@
       ],
       "license": "MIT",
       "homepage": "https://github.com/lqiaoqing/agent-skills/tree/main/skills/painted-story"
+    },
+    {
+      "name": "paper-story",
+      "description": "Create paper-cut, layered pop-up storybook animations and music videos as MP4 with a deterministic Canvas 2D engine, articulated characters, paper shadows, parallax, animated typography and motivated transitions. Use for 纸艺动画, 剪纸动画, 立体绘本, paper-craft story videos, or paper-cut MVs from a theme, script, narration or song. Audio is optional. Do not use for watercolour painting, raster image generation, or a typography-only WebGL MV.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/paper-story"
+      ],
+      "category": "design",
+      "keywords": [
+        "animation",
+        "storytelling",
+        "paper-cut",
+        "pop-up-book",
+        "canvas",
+        "chinese",
+        "windows"
+      ],
+      "homepage": "https://github.com/lqiaoqing/agent-skills/tree/main/skills/paper-story"
     }
   ]
 }

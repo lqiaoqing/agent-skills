@@ -1,0 +1,35 @@
+import { createEngine } from './core/engine.js';
+import { loadFonts } from './core/fonts.js';
+import { PAL } from './core/paper.js';
+import { PROJECT } from './project.js';
+import { TIMELINE } from './timeline.js';
+import shots from './scenes/index.js';
+const params=new URLSearchParams(location.search),capture=params.has('capture');
+Object.assign(PAL,PROJECT.palette || {});
+await loadFonts(new URL('../assets/fonts/',import.meta.url).href);
+const canvas=document.createElement('canvas');document.body.appendChild(canvas);
+const drawSubtitles=(g,T,ctx)=>{
+  if(!TIMELINE.subtitles || params.has('nosubs'))return;
+  const line=TIMELINE.scenes.flatMap(s=>s.lines).find(l=>T>=l.start && T<l.end);
+  if(!line?.text)return;
+  g.save();g.textAlign='center';g.textBaseline='middle';g.font='42px "KuaiLe",sans-serif';
+  const scale=Math.min(1,1680/Math.max(1,g.measureText(line.text).width));
+  g.translate(960,990);g.scale(scale,1);g.lineJoin='round';g.lineWidth=9;g.strokeStyle=PAL.ink;g.strokeText(line.text,0,0);g.fillStyle=PAL.white;g.fillText(line.text,0,0);g.restore();
+};
+const story={duration:TIMELINE.duration,cues:TIMELINE.cues,shots,cuts:TIMELINE.cuts || [],post:drawSubtitles};
+const engine=createEngine({canvas,dpr:Number(params.get('dpr') || 1),story,noGrain:params.has('nograin')});
+engine.setWarp(TIMELINE.warp || {});
+const render=t=>engine.render(Math.min(Math.max(t,0),engine.duration-1e-6),{samples:Number(params.get('samples') || 1),fps:Number(params.get('fps') || PROJECT.fps || 30)});
+window.engine=engine;window.duration=engine.duration;window.renderFrame=render;
+if(!capture){
+  const controls=document.createElement('div');controls.id='controls';controls.innerHTML='<button>播放</button><input type="range" min="0" step="0.01" value="0"><span></span>';
+  document.body.appendChild(controls);const button=controls.querySelector('button'),range=controls.querySelector('input'),label=controls.querySelector('span');range.max=String(engine.duration);
+  const audio=TIMELINE.audio?new Audio(TIMELINE.audio.startsWith('data:')?TIMELINE.audio:new URL('../'+TIMELINE.audio,import.meta.url).href):null;
+  let playing=false,t=0,start=0;
+  const seek=x=>{t=Math.min(engine.duration,Math.max(0,x));if(audio)audio.currentTime=t;start=performance.now()-t*1000;render(t);range.value=String(t);label.textContent=`${t.toFixed(2)} / ${engine.duration.toFixed(2)} 秒`;};
+  const play=async()=>{if(t>=engine.duration)seek(0);playing=!playing;button.textContent=playing?'暂停':'播放';start=performance.now()-t*1000;if(audio){if(playing)try{await audio.play();}catch(e){playing=false;button.textContent='播放';label.textContent=e.message;}else audio.pause();}};
+  button.onclick=play;range.oninput=()=>seek(Number(range.value));window.seek=seek;
+  addEventListener('keydown',e=>{if(e.code==='Space' && e.target.tagName!=='INPUT'){e.preventDefault();play();}});
+  const loop=()=>{if(playing){t=audio?audio.currentTime:(performance.now()-start)/1000;if(t>=engine.duration){playing=false;button.textContent='播放';audio?.pause();}render(t);range.value=String(t);label.textContent=`${t.toFixed(2)} / ${engine.duration.toFixed(2)} 秒`;}requestAnimationFrame(loop);};seek(0);loop();
+}else render(0);
+window.ready=true;
